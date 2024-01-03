@@ -91,7 +91,7 @@ def send_multiple_messages(email_templates, user_id):
 
 def fetch_emails():
     try:
-        docs = current_app.db.collection('clients').document('uid').collection('emails').stream()
+        docs = current_app.db.collection('clients').document('uid').collection('emails').get()
         emails = [doc.to_dict() for doc in docs]
         return emails
     except (ValueError, TypeError, GoogleAPICallError) as e:

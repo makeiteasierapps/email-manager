@@ -13,3 +13,5 @@ env.bak/
 venv.bak/ 
 
 python_version/firebase_service_account.json
+node_version/node_modules
+
