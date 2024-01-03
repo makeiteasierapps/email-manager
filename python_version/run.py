@@ -5,7 +5,7 @@ from views import register_blueprints
 from flask_cors import CORS
 
 def create_app():
-    cred = credentials.Certificate("firebase_service_account.json")
+    cred = credentials.Certificate("../firebase_service_account.json")
     firebase_admin.initialize_app(cred)
     myapp = Flask(__name__)
     CORS(myapp)
