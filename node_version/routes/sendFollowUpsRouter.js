@@ -1,15 +1,16 @@
 const express = require('express');
+const { handleFollowUps } = require('../services/emailService');
 
-const sendFollowUpEmailRouter = express.Router();
+const sendFollowUpsRouter = express.Router();
 
-sendFollowUpEmailRouter
+sendFollowUpsRouter
     .route('/')
     .get((req, res, next) => {
-        // Call function that handles this operation
+        handleFollowUps();
         res.send('ok');
     })
     .all((req, res, next) => {
         res.status(405).send('Only GET operations are allowed on this route');
     });
 
-module.exports = sendFollowUpEmailRouter;
+module.exports = sendFollowUpsRouter;
