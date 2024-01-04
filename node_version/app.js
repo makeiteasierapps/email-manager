@@ -7,7 +7,7 @@ const logger = require('morgan');
 
 const sendRouter = require('./routes/sendRouter');
 const webHookRouter = require('./routes/webHookRouter');
-const sendFollowUpEmailRouter = require('./routes/sendFollowUpEmailRouter');
+const sendFollowUpsRouter = require('./routes/sendFollowUpsRouter');
 const emailDataRouter = require('./routes/emailDataRouter');
 const processFileRouter = require('./routes/processFileRouter');
 
@@ -25,7 +25,7 @@ app.use(cookieParser());
 
 app.use('/send', sendRouter);
 app.use('/webhook', webHookRouter);
-app.use('/sendfollowupemail', sendFollowUpEmailRouter);
+app.use('/sendfollowups', sendFollowUpsRouter);
 app.use('/emaildata', emailDataRouter);
 app.use('/processfile', processFileRouter);
 

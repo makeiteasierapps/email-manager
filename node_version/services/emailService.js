@@ -1,8 +1,9 @@
 const formData = require('form-data');
 const Mailgun = require('mailgun.js');
 const { db, timestamp } = require('../db');
-const domain = 'mg.shauno.co';
+const { differenceInMinutes, differenceInDays } = require('date-fns');
 
+const domain = 'mg.shauno.co';
 const apiKeys = {
     testing: process.env.DEV_TEST_KEY,
 };
@@ -73,4 +74,67 @@ const handleEmailSending = async (data) => {
     await batch.commit();
 };
 
-module.exports = handleEmailSending;
+const handleFollowUps = async () => {
+    const apiKey = apiKeys['testing'];
+    const client = mailgun.client({ username: 'api', key: apiKey });
+
+    const emails = db.collection('clients').doc('uid').collection('emails');
+    const snapshot = await emails.where('response_received', '==', false).get();
+    const docs = snapshot.docs;
+
+    for (let doc of docs) {
+        const data = doc.data();
+        console.log(data);
+        const timeSinceSent = differenceInMinutes(
+            new Date(),
+            data.sent_timestamp.toDate()
+        );
+        if (timeSinceSent > 3 && !data.follow_up_1_sent) {
+            const firstFollowUp = `<p>Hi ${data.recipient_name},</p>
+            <p>This is follow up number 1.</p>
+            <p>Thanks,</p>
+            <p>Shaun</p>`;
+
+            const messageData = {
+                from: `Shaun <shauno@mg.shauno.co>`,
+                to: `${data.recipient_name} <${data.recipient_email}>`,
+                subject: `Re: Custom Subject for ${data.recipient_company}`,
+                text: firstFollowUp,
+                html: `<html><body>${firstFollowUp}</body></html>`,
+            };
+            try {
+                const res = await client.messages.create(domain, messageData);
+                if (res.status === 200) {
+                    console.log('First follow up sent');
+                    await doc.ref.update({ follow_up_1_sent: true });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        } else if (timeSinceSent > 5 && !data.follow_up_2_sent) {
+            const secondFollowUp = `<p>Hi ${data.recipient_name},</p>
+            <p>This is follow up number 2.</p>
+            <p>Thanks,</p>
+            <p>Shaun</p>`;
+
+            const messageData = {
+                from: `Shaun <shauno@mg.shauno.co>`,
+                to: `${data.recipient_name} <${data.recipient_email}>`,
+                subject: `Re: Custom Subject for ${data.recipient_company}`,
+                text: secondFollowUp,
+                html: `<html><body>${secondFollowUp}</body></html>`,
+            };
+            try {
+                const res = await client.messages.create(domain, messageData);
+                if (res.status === 200) {
+                    console.log('Second follow up sent');
+                    await doc.ref.update({ follow_up_2_sent: true });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+};
+
+module.exports = {handleEmailSending, handleFollowUps};
