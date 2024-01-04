@@ -7,7 +7,7 @@ sendFollowUpsRouter
     .route('/')
     .get((req, res, next) => {
         handleFollowUps();
-        res.send('ok');
+        res.status(200).send('Follow ups sent');
     })
     .all((req, res, next) => {
         res.status(405).send('Only GET operations are allowed on this route');
