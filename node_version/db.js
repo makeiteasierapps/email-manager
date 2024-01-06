@@ -1,10 +1,9 @@
-const serviceAccount = require('../firebase_service_account.json');
-const admin = require('firebase-admin');
+import serviceAccount from '../firebase_service_account.json' assert { type: 'json' };
+import admin from 'firebase-admin';
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
 
-const db = admin.firestore();
-const timestamp = admin.firestore.Timestamp.now();
-module.exports = { db, timestamp };
+export const db = admin.firestore();
+export const timestamp = admin.firestore.Timestamp.now();

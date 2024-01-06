@@ -1,7 +1,7 @@
-const formData = require('form-data');
-const Mailgun = require('mailgun.js');
-const { db, timestamp } = require('../db');
-const { differenceInMinutes, differenceInDays } = require('date-fns');
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
+import { db, timestamp } from '../db.js';
+import { differenceInMinutes, differenceInDays } from 'date-fns';
 
 const domain = 'mg.shauno.co';
 const apiKeys = {
@@ -12,7 +12,6 @@ const mailgun = new Mailgun(formData);
 let batch = db.batch();
 
 const sendEmail = async (client, template) => {
-    console.log(template);
     const messageData = {
         from: `Shaun <shauno@mg.shauno.co>`,
         to: `${template.recipient_name} <${template.email}>`,
@@ -22,6 +21,8 @@ const sendEmail = async (client, template) => {
     };
     try {
         const res = await client.messages.create(domain, messageData);
+        console.log(messageData);
+        console.log('res', res);
         if (res.status === 200) {
             let docRef = db
                 .collection('clients')
@@ -44,7 +45,7 @@ const sendEmail = async (client, template) => {
     }
 };
 
-const handleEmailSending = async (data) => {
+export const handleEmailSending = async (data) => {
     const apiKey = apiKeys[data.user_id];
     const client = mailgun.client({ username: 'api', key: apiKey });
 
@@ -74,7 +75,7 @@ const handleEmailSending = async (data) => {
     await batch.commit();
 };
 
-const handleFollowUps = async () => {
+export const handleFollowUps = async () => {
     const apiKey = apiKeys['testing'];
     const client = mailgun.client({ username: 'api', key: apiKey });
 
@@ -84,7 +85,6 @@ const handleFollowUps = async () => {
 
     for (let doc of docs) {
         const data = doc.data();
-        console.log(data);
         const timeSinceSent = differenceInMinutes(
             new Date(),
             data.sent_timestamp.toDate()
@@ -136,5 +136,3 @@ const handleFollowUps = async () => {
         }
     }
 };
-
-module.exports = {handleEmailSending, handleFollowUps};
