@@ -1,17 +1,15 @@
-const handleEmailSending = require('../services/emailService');
+import { handleEmailSending } from '../services/emailService.js';
 
-module.exports = (req, res) => {
-    cors()(req, res, (err) => {
-        if (err) {
-            return res.status(500).send(err);
-        }
-        if (req.method === 'POST') {
-            const result = handleEmailSending(req.body);
-            res.status(200).send(result);
-        } else {
-            res.status(405).send(
-                'Only POST operations are allowed on this route'
-            );
-        }
-    });
+export default async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    if (req.method === 'POST') {
+        const result = await handleEmailSending(req.body);
+        res.status(200).send(result);
+    } else {
+        res.status(405).send('Only POST operations are allowed on this route');
+    }
 };

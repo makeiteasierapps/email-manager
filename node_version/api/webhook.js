@@ -1,16 +1,16 @@
-const crypto = require('crypto');
-const { db } = require('../db');
+import cors from 'cors';
+import { createHmac } from 'crypto';
+import { db } from '../db.js';
 
 const verify = ({ signingKey, timestamp, token, signature }) => {
-    const encodedToken = crypto
-        .createHmac('sha256', signingKey)
+    const encodedToken = createHmac('sha256', signingKey)
         .update(timestamp.concat(token))
         .digest('hex');
 
     return encodedToken === signature;
 };
 
-module.exports = (req, res) => {
+export default (req, res) => {
     cors()(req, res, (err) => {
         if (err) {
             return res.status(500).send(err);

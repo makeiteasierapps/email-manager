@@ -1,7 +1,7 @@
-const cors = require('cors');
-const { handleFollowUps } = require('../services/emailService');
+import cors from 'cors';
+import { handleFollowUps } from '../services/emailService.js';
 
-module.exports = (req, res) => {
+export default (req, res) => {
     cors()(req, res, (err) => {
         if (err) {
             return res.status(500).send(err);
