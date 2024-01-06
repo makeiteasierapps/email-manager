@@ -2,7 +2,7 @@ import serviceAccount from '../firebase_service_account.json' assert { type: 'js
 import admin from 'firebase-admin';
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(process.env.FIREBASE_CONFIG),
 });
 
 export const db = admin.firestore();
