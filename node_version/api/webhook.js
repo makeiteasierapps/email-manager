@@ -9,23 +9,29 @@ const verify = ({ signingKey, timestamp, token, signature }) => {
     return encodedToken === signature;
 };
 
-export default (req, res) => {
-    if (req.method === 'POST') {
-        const { signingKey, timestamp, token, signature, sender } = req.body;
-        if (!verify({ signingKey, timestamp, token, signature })) {
-            return res.status(403).send('Invalid signature');
-        }
-        const emails = db.collection('clients').doc('uid').collection('emails');
-        emails
-            .where('response_received', '==', sender)
-            .get()
-            .then((snapshot) => {
-                snapshot.forEach((doc) => {
-                    doc.ref.update({ response_received: true });
-                });
+export default async (req, res) => {
+    try {
+        if (req.method === 'POST') {
+            const { signingKey, timestamp, token, signature, sender } =
+                req.body;
+            if (!verify({ signingKey, timestamp, token, signature })) {
+                return res.status(403).send('Invalid signature');
+            }
+            const emails = db
+                .collection('clients')
+                .doc('uid')
+                .collection('emails');
+            const snapshot = await emails
+                .where('response_received', '==', sender)
+                .get();
+            snapshot.forEach((doc) => {
+                doc.ref.update({ response_received: true });
             });
-        res.send('ok');
-    } else {
-        res.status(405).send('Access Forbidden');
+            res.send('ok');
+        } else {
+            res.status(405).send('Access Forbidden');
+        }
+    } catch (err) {
+        res.status(500).send('An error occurred while processing webhook');
     }
 };

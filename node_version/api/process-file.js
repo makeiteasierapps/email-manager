@@ -12,7 +12,6 @@ export default (req, res) => {
     if (req.method === 'POST') {
         upload.single('file')(req, res, (err) => {
             if (err) {
-                console.error('Upload error:', err);
                 return res.status(500).send('Upload error');
             }
 
@@ -54,7 +53,6 @@ export default (req, res) => {
                     res.status(200).send({ results, emailTemplates });
                 })
                 .on('error', (err) => {
-                    console.error('CSV parsing error:', err);
                     return res.status(500).send('CSV parsing error');
                 });
         });
