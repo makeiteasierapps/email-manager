@@ -1,9 +1,7 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
 import { db, timestamp } from '../db.js';
-import { differenceInMinutes, differenceInDays } from 'date-fns';
-
-const domain = 'mg.shauno.co';
+import { differenceInMinutes } from 'date-fns';
 
 const mailgun = new Mailgun(formData);
 let batch = db.batch();
@@ -12,22 +10,25 @@ const sendEmail = async (uid, template) => {
     // Fetch the user document from Firestore
     const userDoc = await db.collection('clients').doc(uid).get();
     const userData = userDoc.data();
+    const mailgunApiKey = userData['mailgun-api-key'];
+    const mailgunDomain = userData['mailgun-domain'];
 
     // Initialize the Mailgun client with the API key from the user document
     const client = mailgun.client({
         username: 'api',
-        key: userData['mailgun-api-key'],
+        key: mailgunApiKey,
     });
 
     const messageData = {
-        from: `Shaun <shauno@mg.shauno.co>`,
+        from: `${template.sender_name} <${template.sender_email}>`,
         to: `${template.recipient_name} <${template.email}>`,
         subject: template.subject,
         text: template.message,
         html: `<html><body>${template.message}</body></html>`,
     };
+    
     try {
-        const res = await client.messages.create(domain, messageData);
+        const res = await client.messages.create(mailgunDomain, messageData);
         if (res.status === 200) {
             let docRef = db
                 .collection('clients')
@@ -38,7 +39,7 @@ const sendEmail = async (uid, template) => {
                 recipient_email: template.email,
                 recipient_name: template.recipient_name,
                 recipient_company: template.recipient_company,
-                sender_name: 'Shaun',
+                sender_name: template.sender_name,
                 sent_timestamp: timestamp,
                 follow_up_1_sent: false,
                 follow_up_2_sent: false,
@@ -112,7 +113,10 @@ export const handleFollowUps = async (uid) => {
                 html: `<html><body>${firstFollowUp}</body></html>`,
             };
             try {
-                const res = await client.messages.create(domain, messageData);
+                const res = await client.messages.create(
+                    mailgunDomain,
+                    messageData
+                );
                 if (res.status === 200) {
                     console.log('First follow up sent');
                     await doc.ref.update({ follow_up_1_sent: true });
@@ -134,7 +138,10 @@ export const handleFollowUps = async (uid) => {
                 html: `<html><body>${secondFollowUp}</body></html>`,
             };
             try {
-                const res = await client.messages.create(domain, messageData);
+                const res = await client.messages.create(
+                    mailgunDomain,
+                    messageData
+                );
                 if (res.status === 200) {
                     console.log('Second follow up sent');
                     await doc.ref.update({ follow_up_2_sent: true });
