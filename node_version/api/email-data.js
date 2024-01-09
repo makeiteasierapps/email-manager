@@ -1,12 +1,14 @@
+import { db } from '../db.js';
+
 export default async (req, res) => {
     try {
+        const uid = req.query.uid;
         if (req.method === 'GET') {
             const snapshot = await db
                 .collection('clients')
-                .doc('uid')
+                .doc(uid)
                 .collection('emails')
                 .get();
-
             let emailData = [];
             snapshot.forEach((doc) => {
                 emailData.push(doc.data());
