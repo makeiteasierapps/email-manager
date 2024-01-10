@@ -6,7 +6,7 @@ import { differenceInMinutes } from 'date-fns';
 const mailgun = new Mailgun(formData);
 let batch = db.batch();
 
-const sendEmail = async (uid, template) => {
+const sendEmail = async (uid, template, batch) => {
     // Fetch the user document from Firestore
     const userDoc = await db.collection('clients').doc(uid).get();
     const userData = userDoc.data();
@@ -20,8 +20,8 @@ const sendEmail = async (uid, template) => {
     });
 
     const messageData = {
-        from: `${template.sender_name} <${template.sender_email}>`,
-        to: `${template.recipient_name} <${template.email}>`,
+        from: `${template.from_name} <${template.from_email}>`,
+        to: `${template.to_name} <${template.to_email}>`,
         subject: template.subject,
         text: template.message,
         html: `<html><body>${template.message}</body></html>`,
@@ -36,10 +36,10 @@ const sendEmail = async (uid, template) => {
                 .collection('emails')
                 .doc();
             batch.set(docRef, {
-                recipient_email: template.email,
-                recipient_name: template.recipient_name,
-                recipient_company: template.recipient_company,
-                sender_name: template.sender_name,
+                to_email: template.to_email,
+                to_name: template.to_name,
+                to_company: template.to_company,
+                from_name: template.from_name,
                 sent_timestamp: timestamp,
                 follow_up_1_sent: false,
                 follow_up_2_sent: false,
@@ -52,6 +52,7 @@ const sendEmail = async (uid, template) => {
 };
 
 export const handleEmailSending = async (data) => {
+    let batch = db.batch();
     // Check if email_templates is an array
     if (Array.isArray(data.emailTemplates)) {
         // Send multiple emails
@@ -59,12 +60,12 @@ export const handleEmailSending = async (data) => {
             await sendEmail(data.uid, template);
         }
     } else {
-        // Send a single email
+        // Send a single to_email
         const requiredFields = [
-            'sender_name',
-            'sender_email',
-            'email',
-            'recipient_name',
+            'from_name',
+            'from_email',
+            'to_email',
+            'to_name',
             'subject',
             'message',
         ];
@@ -73,7 +74,7 @@ export const handleEmailSending = async (data) => {
                 return { message: `${field} is required`, status: 400 };
             }
         }
-        await sendEmail(data.uid, data.emailTemplates);
+        await sendEmail(data.uid, data.emailTemplates, batch);
     }
     await batch.commit();
 };
@@ -100,15 +101,15 @@ export const handleFollowUps = async (uid) => {
             data.sent_timestamp.toDate()
         );
         if (timeSinceSent > 3 && !data.follow_up_1_sent) {
-            const firstFollowUp = `<p>Hi ${data.recipient_name},</p>
+            const firstFollowUp = `<p>Hi ${data.to_name},</p>
             <p>This is follow up number 1.</p>
             <p>Thanks,</p>
             <p>Shaun</p>`;
 
             const messageData = {
                 from: `Shaun <shauno@mg.shauno.co>`,
-                to: `${data.recipient_name} <${data.recipient_email}>`,
-                subject: `Re: Custom Subject for ${data.recipient_company}`,
+                to: `${data.to_name} <${data.to_email}>`,
+                subject: `Re: Custom Subject for ${data.to_company}`,
                 text: firstFollowUp,
                 html: `<html><body>${firstFollowUp}</body></html>`,
             };
@@ -125,15 +126,15 @@ export const handleFollowUps = async (uid) => {
                 console.error(err);
             }
         } else if (timeSinceSent > 5 && !data.follow_up_2_sent) {
-            const secondFollowUp = `<p>Hi ${data.recipient_name},</p>
+            const secondFollowUp = `<p>Hi ${data.to_name},</p>
             <p>This is follow up number 2.</p>
             <p>Thanks,</p>
             <p>Shaun</p>`;
 
             const messageData = {
                 from: `Shaun <shauno@mg.shauno.co>`,
-                to: `${data.recipient_name} <${data.recipient_email}>`,
-                subject: `Re: Custom Subject for ${data.recipient_company}`,
+                to: `${data.to_name} <${data.to_email}>`,
+                subject: `Re: Custom Subject for ${data.to_company}`,
                 text: secondFollowUp,
                 html: `<html><body>${secondFollowUp}</body></html>`,
             };
