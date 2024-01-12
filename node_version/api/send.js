@@ -8,6 +8,7 @@ export default async (req, res) => {
         }
     
         if (req.method === 'POST') {
+            console.log(req.body);
             const result = await handleEmailSending(req.body);
             res.status(200).send(result);
         } else {

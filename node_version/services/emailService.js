@@ -26,7 +26,7 @@ const sendEmail = async (uid, template, batch) => {
         text: template.message,
         html: `<html><body>${template.message}</body></html>`,
     };
-    
+
     try {
         const res = await client.messages.create(mailgunDomain, messageData);
         if (res.status === 200) {
@@ -57,7 +57,7 @@ export const handleEmailSending = async (data) => {
     if (Array.isArray(data.emailTemplates)) {
         // Send multiple emails
         for (let template of data.emailTemplates) {
-            await sendEmail(data.uid, template);
+            await sendEmail(data.uid, template, batch);
         }
     } else {
         // Send a single to_email
