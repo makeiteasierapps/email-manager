@@ -1,11 +1,10 @@
 import { handleFollowUps } from '../services/emailService.js';
 
 export default async (req, res) => {
-    const uid = req.query.uid;
     try {
         if (req.method === 'GET') {
-            await handleFollowUps(uid);
-            res.status(200).send('Follow ups sent');
+            const followUpsSent = await handleFollowUps();
+            res.status(200).send(followUpsSent);
         } else {
             res.status(405).send(
                 'Only GET operations are allowed on this route'

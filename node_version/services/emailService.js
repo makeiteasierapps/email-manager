@@ -4,7 +4,6 @@ import { db, timestamp } from '../db.js';
 import { differenceInMinutes } from 'date-fns';
 
 const mailgun = new Mailgun(formData);
-let batch = db.batch();
 
 const sendEmail = async (uid, template, batch) => {
     // Fetch the user document from Firestore
@@ -79,77 +78,99 @@ export const handleEmailSending = async (data) => {
     await batch.commit();
 };
 
-export const handleFollowUps = async (uid) => {
-    // Fetch the user document from Firestore
-    const userDoc = await db.collection('clients').doc(uid).get();
-    const userData = userDoc.data();
+export const handleFollowUps = async () => {
+    let sentEmails = [];
+    // Fetch all user documents from Firestore
+    const usersSnapshot = await db.collection('clients').get();
+    const users = usersSnapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data(),
+    }));
 
-    // Initialize the Mailgun client with the API key from the user document
-    const client = mailgun.client({
-        username: 'api',
-        key: userData['mailgun-api-key'],
-    });
+    for (let userData of users) {
+        const uid = userData.uid;
 
-    const emails = userDoc.collection('emails');
-    const snapshot = await emails.where('response_received', '==', false).get();
-    const docs = snapshot.docs;
+        // Initialize the Mailgun client with the API key from the user document
+        const client = mailgun.client({
+            username: 'api',
+            key: userData['mailgun-api-key'],
+        });
 
-    for (let doc of docs) {
-        const data = doc.data();
-        const timeSinceSent = differenceInMinutes(
-            new Date(),
-            data.sent_timestamp.toDate()
+        // Fetch follow-up emails from Firestore
+        const followUpEmailsSnapshot = await db
+            .collection('clients')
+            .doc(uid)
+            .collection('follow-up-email-templates')
+            .get();
+        const followUpEmails = followUpEmailsSnapshot.docs.map((doc) =>
+            doc.data()
         );
-        if (timeSinceSent > 3 && !data.follow_up_1_sent) {
-            const firstFollowUp = `<p>Hi ${data.to_name},</p>
-            <p>This is follow up number 1.</p>
-            <p>Thanks,</p>
-            <p>Shaun</p>`;
 
-            const messageData = {
-                from: `Shaun <shauno@mg.shauno.co>`,
-                to: `${data.to_name} <${data.to_email}>`,
-                subject: `Re: Custom Subject for ${data.to_company}`,
-                text: firstFollowUp,
-                html: `<html><body>${firstFollowUp}</body></html>`,
-            };
-            try {
-                const res = await client.messages.create(
-                    mailgunDomain,
-                    messageData
-                );
-                if (res.status === 200) {
-                    console.log('First follow up sent');
-                    await doc.ref.update({ follow_up_1_sent: true });
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        } else if (timeSinceSent > 5 && !data.follow_up_2_sent) {
-            const secondFollowUp = `<p>Hi ${data.to_name},</p>
-            <p>This is follow up number 2.</p>
-            <p>Thanks,</p>
-            <p>Shaun</p>`;
+        // Access the 'emails' subcollection
+        const emails = db.collection('clients').doc(uid).collection('emails');
+        const snapshot = await emails
+            .where('response_received', '==', false)
+            .get();
+        const docs = snapshot.docs;
 
-            const messageData = {
-                from: `Shaun <shauno@mg.shauno.co>`,
-                to: `${data.to_name} <${data.to_email}>`,
-                subject: `Re: Custom Subject for ${data.to_company}`,
-                text: secondFollowUp,
-                html: `<html><body>${secondFollowUp}</body></html>`,
-            };
-            try {
-                const res = await client.messages.create(
-                    mailgunDomain,
-                    messageData
+        for (let doc of docs) {
+            const data = doc.data();
+            const timeSinceSent = differenceInMinutes(
+                new Date(),
+                data.sent_timestamp.toDate()
+            );
+
+            if (timeSinceSent > 3 && !data.follow_up_1_sent) {
+                const followUp = followUpEmails.find(
+                    (email) => email.id === 'follow-up1'
                 );
-                if (res.status === 200) {
-                    console.log('Second follow up sent');
-                    await doc.ref.update({ follow_up_2_sent: true });
+
+                const messageData = {
+                    from: `${userData.from_names[0]} <${userData.from_names[0]}@${userData['mailgun-domain']}>`,
+                    to: `${data.to_name} <${data.to_email}>`,
+                    subject: followUp.subject,
+                    text: followUp.message,
+                    html: `<html><body>${followUp.message}</body></html>`,
+                };
+
+                try {
+                    const res = await client.messages.create(
+                        userData['mailgun-domain'],
+                        messageData
+                    );
+                    if (res.status === 200) {
+                        await doc.ref.update({ follow_up_1_sent: true });
+                        sentEmails.push(messageData);
+                    }
+                } catch (err) {
+                    console.error(err);
                 }
-            } catch (err) {
-                console.error(err);
+            } else if (timeSinceSent > 5 && !data.follow_up_2_sent) {
+                const followUp = followUpEmails.find(
+                    (email) => email.id === 'follow-up2'
+                );
+
+                const messageData = {
+                    from: `${userData.from_names[0]} <${userData.from_names[0]}@${userData['mailgun-domain']}>`,
+                    to: `${data.to_name} <${data.to_email}>`,
+                    subject: followUp.subject,
+                    text: followUp.message,
+                    html: `<html><body>${followUp.message}</body></html>`,
+                };
+                try {
+                    const res = await client.messages.create(
+                        userData['mailgun-domain'],
+                        messageData
+                    );
+                    if (res.status === 200) {
+                        await doc.ref.update({ follow_up_2_sent: true });
+                        sentEmails.push(messageData);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
             }
         }
     }
+    return sentEmails;
 };
