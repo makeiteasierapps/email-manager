@@ -44,7 +44,7 @@ export default async (req, res) => {
                 .collection('emails');
 
             const snapshot = await emails
-                .where('response_received', '==', sender)
+                .where('to_email', '==', sender)
                 .get();
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
