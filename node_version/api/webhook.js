@@ -6,6 +6,7 @@ const verify = ({ signingKey, timestamp, token, signature }) => {
         .update(timestamp.concat(token))
         .digest('hex');
 
+    console.log(encodedToken === signature);
     return encodedToken === signature;
 };
 
@@ -25,6 +26,7 @@ export default async (req, res) => {
                 return res.status(403).send('Invalid signature');
             }
 
+            console.log(recipient);
             // Extract the domain from the recipient email
             const domain = recipient.split('@')[1];
             console.log('domain', domain);
