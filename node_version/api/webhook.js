@@ -32,20 +32,16 @@ export default async (req, res) => {
             if (clientDoc.empty) {
                 return res.status(404).send('Client not found');
             }
+            console.log('clientDoc', clientDoc.docs[0].id);
 
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
-            console.log('clientDocs', clientDoc.docs);
-            console.log(clientDoc.docs[0].data());
-            console.log('uid', uid);
 
             // Use the uid to grab the email collection
             const emails = db
                 .collection('clients')
                 .doc(uid)
                 .collection('emails');
-
-            console.log('emails', emails);
 
             const snapshot = await emails
                 .where('response_received', '==', sender)
