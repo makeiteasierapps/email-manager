@@ -12,7 +12,6 @@ const verify = ({ signingKey, timestamp, token, signature }) => {
 export default async (req, res) => {
     try {
         if (req.method === 'POST') {
-            console.log(req.body);
             const {
                 signingKey,
                 timestamp,
@@ -21,6 +20,7 @@ export default async (req, res) => {
                 sender,
                 recipient,
             } = req.body;
+
             if (!verify({ signingKey, timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
