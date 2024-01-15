@@ -1,7 +1,8 @@
 import { createHmac } from 'crypto';
 import { db } from '../db.js';
 
-const verify = ({ signingKey, timestamp, token, signature }) => {
+const verify = ({ timestamp, token, signature }) => {
+    const signingKey = process.env.MAILGUN_WEBHOOK_KEY;
     const encodedToken = createHmac('sha256', signingKey)
         .update(timestamp.concat(token))
         .digest('hex');
@@ -11,19 +12,11 @@ const verify = ({ signingKey, timestamp, token, signature }) => {
 };
 
 export default async (req, res) => {
-    console.log(req.body);
     try {
         if (req.method === 'POST') {
-            const {
-                signingKey,
-                timestamp,
-                token,
-                signature,
-                sender,
-                recipient,
-            } = req.body;
+            const { timestamp, token, signature, sender, recipient } = req.body;
 
-            if (!verify({ signingKey, timestamp, token, signature })) {
+            if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
 
