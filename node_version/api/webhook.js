@@ -12,6 +12,7 @@ const verify = ({ signingKey, timestamp, token, signature }) => {
 export default async (req, res) => {
     try {
         if (req.method === 'POST') {
+            console.log(req.body);
             const { signingKey, timestamp, token, signature, sender } =
                 req.body;
             if (!verify({ signingKey, timestamp, token, signature })) {
