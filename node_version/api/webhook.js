@@ -27,12 +27,15 @@ export default async (req, res) => {
 
             // Extract the domain from the recipient email
             const domain = recipient.split('@')[1];
+            console.log('domain', domain);
 
             // Search the client collection for a document with the extracted domain
             const clientDoc = await db
                 .collection('clients')
                 .where('domain', '==', domain)
                 .get();
+
+            console.log('clientDoc', clientDoc);
 
             // If no client is found, return an error
             if (clientDoc.empty) {
@@ -41,12 +44,15 @@ export default async (req, res) => {
 
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
+            console.log('uid', uid);
 
             // Use the uid to grab the email collection
             const emails = db
                 .collection('clients')
                 .doc(uid)
                 .collection('emails');
+
+            console.log('emails', emails);
 
             const snapshot = await emails
                 .where('response_received', '==', sender)
