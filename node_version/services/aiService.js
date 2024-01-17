@@ -1,5 +1,8 @@
+import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import { sendAiEmail } from '../services/emailService.js';
+
+dotenv.config();
 
 export const aiEmailResponse = async ({
     uid,
@@ -8,7 +11,7 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
-    const openai = new OpenAI();
+    const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
     const completion = await openai.chat.completions.create({
         messages: [
@@ -24,19 +27,17 @@ export const aiEmailResponse = async ({
         ],
         model: 'gpt-4-1106-preview',
     });
-
-    console.log(completion.choices[0]);
-
+    
     const emailResult = await sendAiEmail({
         uid,
         toEmail,
         toName,
         clientEmail,
-        email: completion.choices[0].text,
+        email: completion.choices[0].message.content,
     });
 
     if (emailResult.success) {
-        return completion.choices[0].text;
+        return completion.choices[0].message.content;
     } else {
         throw new Error(emailResult.message);
     }
