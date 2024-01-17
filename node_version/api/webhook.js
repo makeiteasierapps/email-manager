@@ -14,7 +14,14 @@ const verify = ({ timestamp, token, signature }) => {
 export default async (req, res) => {
     try {
         if (req.method === 'POST') {
-            const { timestamp, token, signature, sender, recipient } = req.body;
+            const {
+                timestamp,
+                token,
+                signature,
+                sender: toEmail,
+                recipient,
+                'stripped-text': receivedEmail,
+            } = req.body;
             console.log(req.body);
 
             if (!verify({ timestamp, token, signature })) {
@@ -22,12 +29,12 @@ export default async (req, res) => {
             }
 
             // Extract the domain from the recipient email
-            const domain = recipient.split('@')[1];
+            const clientDomain = recipient.split('@')[1];
 
             // Search the client collection for a document with the extracted domain
             const clientDoc = await db
                 .collection('clients')
-                .where('mailgun-domain', '==', domain)
+                .where('mailgun-domain', '==', clientDomain)
                 .get();
 
             // If no client is found, return an error
@@ -38,8 +45,8 @@ export default async (req, res) => {
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
 
-            // Client name
-            const clientName = clientDoc.docs[0].data().to_name;
+            // Name of customer who responsed to email
+            const toName = clientDoc.docs[0].data().to_name;
 
             // Use the uid to grab the email collection
             const emails = db
@@ -47,11 +54,22 @@ export default async (req, res) => {
                 .doc(uid)
                 .collection('emails');
 
-            const snapshot = await emails.where('to_email', '==', sender).get();
+            const snapshot = await emails
+                .where('to_email', '==', toEmail)
+                .get();
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
             });
-            res.send('ok');
+            
+            const aiResonse = await aiEmailResponse({
+                uid,
+                receivedEmail,
+                toName,
+                toEmail,
+                recipient,
+            });
+            console.log(aiResonse);
+            res.send('OK');
         } else {
             res.status(405).send('Access Forbidden');
         }
