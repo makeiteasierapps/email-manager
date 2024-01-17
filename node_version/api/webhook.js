@@ -18,7 +18,7 @@ export default async (req, res) => {
                 timestamp,
                 token,
                 signature,
-                sender: toEmail,
+                sender,
                 recipient,
             } = req.body;
 
@@ -27,7 +27,7 @@ export default async (req, res) => {
                 timestamp,
                 token,
                 signature,
-                toEmail,
+                sender,
                 recipient,
             });
             const receivedEmail = req.body['stripped-text'];
