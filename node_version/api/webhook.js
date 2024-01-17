@@ -16,13 +16,14 @@ export default async (req, res) => {
         if (req.method === 'POST') {
             const { timestamp, token, signature, sender, recipient } = req.body;
             const receivedEmail = req.body['stripped-text'];
-
+            console.log('receivedEmail', receivedEmail);
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
 
             // Extract the domain from the recipient email
             const clientDomain = recipient.split('@')[1];
+            console.log('clientDomain', clientDomain);
 
             // Search the client collection for a document with the extracted domain
             const clientDoc = await db
