@@ -56,11 +56,13 @@ export default async (req, res) => {
             const snapshot = await emails
                 .where('to_email', '==', toEmail)
                 .get();
-                
+
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
             });
 
+            console.log('receivedEmail', receivedEmail);
+            
             const aiResonse = await aiEmailResponse({
                 uid,
                 receivedEmail,

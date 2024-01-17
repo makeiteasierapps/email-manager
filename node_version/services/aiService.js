@@ -11,6 +11,7 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
+    console.log('aiEmailResponse');
     console.log('data', {
         uid,
         email,
