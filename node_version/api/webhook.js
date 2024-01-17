@@ -23,6 +23,8 @@ export default async (req, res) => {
                 'stripped-text': receivedEmail,
             } = req.body;
 
+            console.log('receivedEmail', receivedEmail);
+
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
@@ -62,7 +64,7 @@ export default async (req, res) => {
             });
 
             console.log('receivedEmail', receivedEmail);
-            
+
             const aiResonse = await aiEmailResponse({
                 uid,
                 receivedEmail,
