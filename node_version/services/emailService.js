@@ -73,8 +73,8 @@ export const sendAiEmail = async ({
         from: `Playful Assistant <${clientEmail}>`,
         to: `${toName} <${toEmail}>`,
         subject: 'A response from our funny and playful AI assistant',
-        text: template.email,
-        html: `<html><body>${template.email}</body></html>`,
+        text: email,
+        html: `<html><body>${email}</body></html>`,
     };
 
     try {
