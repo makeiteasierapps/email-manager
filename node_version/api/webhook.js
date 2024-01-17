@@ -16,14 +16,13 @@ export default async (req, res) => {
         if (req.method === 'POST') {
             const { timestamp, token, signature, sender, recipient } = req.body;
             const receivedEmail = req.body['stripped-text'];
-            console.log('receivedEmail', receivedEmail);
+
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
 
             // Extract the domain from the recipient email
             const clientDomain = recipient.split('@')[1];
-            console.log('clientDomain', clientDomain);
 
             // Search the client collection for a document with the extracted domain
             const clientDoc = await db
@@ -38,11 +37,9 @@ export default async (req, res) => {
 
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
-            console.log('uid', uid);
 
             // Name of customer who responsed to email
             const toName = clientDoc.docs[0].data().to_name;
-            console.log('toName', toName);
 
             // Use the uid to grab the email collection
             const emails = db
@@ -53,20 +50,17 @@ export default async (req, res) => {
             const snapshot = await emails.where('to_email', '==', sender).get();
 
             snapshot.forEach((doc) => {
-                console.log('doc', doc.data());
                 doc.ref.update({ response_received: true });
             });
 
-            console.log('receivedEmail', receivedEmail);
-
-            const aiResonse = await aiEmailResponse({
+            const aiResponse = await aiEmailResponse({
                 uid,
-                receivedEmail,
+                email: receivedEmail,
                 toName,
-                sender,
-                recipient,
+                toEmail: sender,
+                clientEmail: recipient,
             });
-            console.log(aiResonse);
+            console.log('aiResponse', aiResponse);
             res.send('OK');
         } else {
             res.status(405).send('Access Forbidden');
