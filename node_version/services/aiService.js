@@ -11,14 +11,6 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
-    console.log('aiEmailResponse');
-    console.log('data', {
-        uid,
-        email,
-        toName,
-        toEmail,
-        clientEmail,
-    });
 
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
@@ -37,7 +29,6 @@ export const aiEmailResponse = async ({
         model: 'gpt-4-1106-preview',
     });
 
-    console.log(completion.choices[0].message.content);
 
     const emailResult = await sendAiEmail({
         uid,

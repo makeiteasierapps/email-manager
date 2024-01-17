@@ -38,9 +38,6 @@ export default async (req, res) => {
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
 
-            // Name of customer who responsed to email
-            const toName = clientDoc.docs[0].data().to_name;
-
             // Use the uid to grab the email collection
             const emails = db
                 .collection('clients')
@@ -49,8 +46,10 @@ export default async (req, res) => {
 
             const snapshot = await emails.where('to_email', '==', sender).get();
 
+            let toName;
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
+                toName = doc.data().to_name; // Extract the to_name field from the email document
             });
 
             const aiResponse = await aiEmailResponse({
@@ -60,7 +59,7 @@ export default async (req, res) => {
                 toEmail: sender,
                 clientEmail: recipient,
             });
-            console.log('aiResponse', aiResponse);
+            
             res.send('OK');
         } else {
             res.status(405).send('Access Forbidden');
