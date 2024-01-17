@@ -11,24 +11,28 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
-    const openai = new OpenAI(process.env.OPENAI_API_KEY);
+    try {
+        const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-    const completion = await openai.chat.completions.create({
-        messages: [
-            {
-                role: 'system',
-                content: `You are a playful assistant who reads emails and responds.
-                *** Instructions *** 
-                When possible use the persons name ${toName}. 
-                Always finish your response with a joke. 
-                Format the email with colorful html. Exclude the <html> & <body> tags.`,
-            },
-            { role: 'user', content: email },
-        ],
-        model: 'gpt-4-1106-preview',
-    });
+        const completion = await openai.chat.completions.create({
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a playful assistant who reads emails and responds.
+                    *** Instructions *** 
+                    When possible use the persons name ${toName}. 
+                    Always finish your response with a joke. 
+                    Format the email with colorful html. Exclude the <html> & <body> tags.`,
+                },
+                { role: 'user', content: email },
+            ],
+            model: 'gpt-4-1106-preview',
+        });
 
-    console.log(completion.choices[0].message.content);
+        console.log(completion.choices[0].message.content);
+    } catch (error) {
+        console.error(error);
+    }
 
     const emailResult = await sendAiEmail({
         uid,
