@@ -11,6 +11,14 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
+    console.log('data', {
+        uid,
+        email,
+        toName,
+        toEmail,
+        clientEmail,
+    });
+    
     try {
         const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
