@@ -37,9 +37,11 @@ export default async (req, res) => {
 
             // Get the uid of the client
             const uid = clientDoc.docs[0].id;
+            console.log('uid', uid);
 
             // Name of customer who responsed to email
             const toName = clientDoc.docs[0].data().to_name;
+            console.log('toName', toName);
 
             // Use the uid to grab the email collection
             const emails = db
@@ -50,6 +52,7 @@ export default async (req, res) => {
             const snapshot = await emails.where('to_email', '==', sender).get();
 
             snapshot.forEach((doc) => {
+                console.log('doc', doc.data());
                 doc.ref.update({ response_received: true });
             });
 
