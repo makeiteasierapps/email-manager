@@ -14,24 +14,9 @@ const verify = ({ timestamp, token, signature }) => {
 export default async (req, res) => {
     try {
         if (req.method === 'POST') {
-            const {
-                timestamp,
-                token,
-                signature,
-                sender,
-                recipient,
-            } = req.body;
-
-            console.log('req.body', req.body);
-            console.log('extratcted', {
-                timestamp,
-                token,
-                signature,
-                sender,
-                recipient,
-            });
+            const { timestamp, token, signature, sender, recipient } = req.body;
             const receivedEmail = req.body['stripped-text'];
-            console.log('receivedEmail', receivedEmail);
+
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
@@ -62,9 +47,7 @@ export default async (req, res) => {
                 .doc(uid)
                 .collection('emails');
 
-            const snapshot = await emails
-                .where('to_email', '==', toEmail)
-                .get();
+            const snapshot = await emails.where('to_email', '==', sender).get();
 
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
@@ -76,7 +59,7 @@ export default async (req, res) => {
                 uid,
                 receivedEmail,
                 toName,
-                toEmail,
+                sender,
                 recipient,
             });
             console.log(aiResonse);
