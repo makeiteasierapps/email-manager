@@ -11,7 +11,6 @@ export const aiEmailResponse = async ({
     toEmail,
     clientEmail,
 }) => {
-    console.log('aiEmailResponse');
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
     const completion = await openai.chat.completions.create({

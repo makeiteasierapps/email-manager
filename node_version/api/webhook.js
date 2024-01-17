@@ -22,7 +22,6 @@ export default async (req, res) => {
                 recipient,
                 'stripped-text': receivedEmail,
             } = req.body;
-            console.log(req.body);
 
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
@@ -60,7 +59,7 @@ export default async (req, res) => {
             snapshot.forEach((doc) => {
                 doc.ref.update({ response_received: true });
             });
-            
+
             const aiResonse = await aiEmailResponse({
                 uid,
                 receivedEmail,
