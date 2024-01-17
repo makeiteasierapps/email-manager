@@ -22,6 +22,14 @@ export default async (req, res) => {
                 recipient,
             } = req.body;
 
+            console.log('req.body', req.body);
+            console.log('extratcted', {
+                timestamp,
+                token,
+                signature,
+                toEmail,
+                recipient,
+            });
             const receivedEmail = req.body['stripped-text'];
             console.log('receivedEmail', receivedEmail);
             if (!verify({ timestamp, token, signature })) {
