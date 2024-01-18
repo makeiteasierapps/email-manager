@@ -6,29 +6,29 @@ dotenv.config();
 
 export const aiEmailResponse = async ({
     uid,
-    email,
+    emailChain,
     toName,
     toEmail,
     clientEmail,
 }) => {
-
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
+    const messages = [
+        {
+            role: 'system',
+            content: `You are a playful assistant who reads emails and responds.
+                *** Instructions *** 
+                When possible use the persons name ${toName}. 
+                Always finish your response with a joke. 
+                Format the email with colorful html. Exclude the <html> & <body> tags.`,
+        },
+        ...emailChain,
+    ];
+    console.log(messages);
     const completion = await openai.chat.completions.create({
-        messages: [
-            {
-                role: 'system',
-                content: `You are a playful assistant who reads emails and responds.
-                    *** Instructions *** 
-                    When possible use the persons name ${toName}. 
-                    Always finish your response with a joke. 
-                    Format the email with colorful html. Exclude the <html> & <body> tags.`,
-            },
-            { role: 'user', content: email },
-        ],
+        messages: messages,
         model: 'gpt-4-1106-preview',
     });
-
 
     const emailResult = await sendAiEmail({
         uid,

@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { db } from '../db.js';
+import { db, FieldValue } from '../db.js';
 import { aiEmailResponse } from '../services/aiService.js';
 
 const verify = ({ timestamp, token, signature }) => {
@@ -46,20 +46,34 @@ export default async (req, res) => {
 
             const snapshot = await emails.where('to_email', '==', sender).get();
 
+            let emailChain;
             let toName;
+
             snapshot.forEach((doc) => {
-                doc.ref.update({ response_received: true });
-                toName = doc.data().to_name; // Extract the to_name field from the email document
+                const emailUpdate = { role: 'user', content: receivedEmail };
+                emailChain = [...doc.data().email, emailUpdate];
+                
+                toName = doc.data().to_name;
+                doc.ref.update({
+                    email: FieldValue.arrayUnion(emailUpdate),
+                    response_received: true,
+                });
             });
 
             const aiResponse = await aiEmailResponse({
                 uid,
-                email: receivedEmail,
+                emailChain,
                 toName,
                 toEmail: sender,
                 clientEmail: recipient,
             });
-            
+
+            snapshot.forEach((doc) => {
+                const emailUpdate = { role: 'assistant', content: aiResponse };
+                doc.ref.update({
+                    email: FieldValue.arrayUnion(emailUpdate),
+                });
+            });
             res.send('OK');
         } else {
             res.status(405).send('Access Forbidden');

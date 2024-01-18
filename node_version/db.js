@@ -20,5 +20,8 @@ admin.initializeApp({
     credential: admin.credential.cert(firebaseConfig),
 });
 
-export const db = admin.firestore();
+const db = admin.firestore();
+const FieldValue = admin.firestore.FieldValue;
+
+export { db, FieldValue };
 export const timestamp = admin.firestore.Timestamp.now();

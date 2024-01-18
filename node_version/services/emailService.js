@@ -1,6 +1,6 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
-import { db, timestamp } from '../db.js';
+import { db, timestamp, FieldValue } from '../db.js';
 import { differenceInMinutes } from 'date-fns';
 
 const mailgun = new Mailgun(formData);
@@ -39,6 +39,12 @@ const sendEmail = async (uid, template, batch) => {
                 to_name: template.to_name,
                 to_company: template.to_company,
                 from_name: template.from_name,
+                email: [
+                    {
+                        role: 'assistant',
+                        content: template.message,
+                    },
+                ],
                 sent_timestamp: timestamp,
                 follow_up_1_sent: false,
                 follow_up_2_sent: false,
@@ -79,6 +85,7 @@ export const sendAiEmail = async ({
 
     try {
         await client.messages.create(mailgunDomain, messageData);
+
         return { success: true, message: 'Email sent successfully.' };
     } catch (err) {
         console.error(err);
