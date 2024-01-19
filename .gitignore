@@ -14,4 +14,4 @@ venv.bak/
 
 firebase_service_account.json
 node_version/node_modules
-
+node_version/services/emailapi-29f96-42557de3cb10.json

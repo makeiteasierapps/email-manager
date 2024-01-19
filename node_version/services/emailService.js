@@ -1,7 +1,9 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
-import { db, timestamp, FieldValue } from '../db.js';
 import { differenceInMinutes } from 'date-fns';
+
+import { db, timestamp } from '../db.js';
+import { decryptText } from './securityService.js';
 
 const mailgun = new Mailgun(formData);
 
@@ -9,8 +11,10 @@ const sendEmail = async (uid, template, batch) => {
     // Fetch the user document from Firestore
     const userDoc = await db.collection('clients').doc(uid).get();
     const userData = userDoc.data();
-    const mailgunApiKey = userData['mailgun-api-key'];
-    const mailgunDomain = userData['mailgun-domain'];
+    const encryptedMailgunApiKey = userData['mailgunApiKey'];
+    const mailgunApiKey = await decryptText(encryptedMailgunApiKey);
+
+    const mailgunDomain = userData['mailgunDomain'];
 
     // Initialize the Mailgun client with the API key from the user document
     const client = mailgun.client({
@@ -99,7 +103,7 @@ export const handleFollowUps = async () => {
         // Initialize the Mailgun client with the API key from the user document
         const client = mailgun.client({
             username: 'api',
-            key: userData['mailgun-api-key'],
+            key: userData['mailgunApiKey'],
         });
 
         // Fetch follow-up emails from Firestore
@@ -132,7 +136,7 @@ export const handleFollowUps = async () => {
                 );
 
                 const messageData = {
-                    from: `${userData.from_names[0]} <${userData.from_names[0]}@${userData['mailgun-domain']}>`,
+                    from: `${userData.fromNames[0]} <${userData.fromNames[0]}@${userData['mailgunDomain']}>`,
                     to: `${data.to_name} <${data.to_email}>`,
                     subject: followUp.subject,
                     text: followUp.message,
@@ -157,7 +161,7 @@ export const handleFollowUps = async () => {
                 );
 
                 const messageData = {
-                    from: `${userData.from_names[0]} <${userData.from_names[0]}@${userData['mailgun-domain']}>`,
+                    from: `${userData.fromNames[0]} <${userData.fromNames[0]}@${userData['mailgunDomain']}>`,
                     to: `${data.to_name} <${data.to_email}>`,
                     subject: followUp.subject,
                     text: followUp.message,

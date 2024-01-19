@@ -2,6 +2,7 @@ import { encryptText } from '../services/securityService.js';
 import { db } from '../db.js';
 
 export default async (req, res) => {
+    
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
@@ -15,23 +16,23 @@ export default async (req, res) => {
             return;
         }
 
-        let encryptedMailgunApiKey, encryptedMailgunDomain;
-        
+        let encryptedMailgunApiKey;
+
         try {
             encryptedMailgunApiKey = await encryptText(mailgunApiKey);
-            encryptedMailgunDomain = await encryptText(mailgunDomain);
+            console.log(encryptedMailgunApiKey);
         } catch (err) {
-            res.status(500).send(`Encryption failed: ${err}`);
+            return res.status(500).send(`Encryption failed, ${err}`);
         }
 
         try {
             await db.collection('clients').doc(uid).set({
                 mailgunApiKey: encryptedMailgunApiKey,
-                mailgunDomain: encryptedMailgunDomain,
+                mailgunDomain: mailgunDomain,
             });
-            res.status(200).end();
+            res.status(200).send(`keys: ${encryptedMailgunApiKey}`);
         } catch (err) {
-            res.status(500).send(
+            return res.status(500).send(
                 `An error occurred while processing your request': ${err}`
             );
         }

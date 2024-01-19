@@ -10,8 +10,8 @@ const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
     // Fetch the user document from Firestore
     const userDoc = await db.collection('clients').doc(uid).get();
     const userData = userDoc.data();
-    const mailgunApiKey = userData['mailgun-api-key'];
-    const mailgunDomain = userData['mailgun-domain'];
+    const mailgunApiKey = userData['mailgunApiKey'];
+    const mailgunDomain = userData['mailgunDomain'];
 
     // Initialize the Mailgun client with the API key from the user document
     const client = mailgun.client({
