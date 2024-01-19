@@ -1,40 +1,29 @@
-import { encryptText } from '../services/securityService.js';
 import { db } from '../db.js';
 
 export default async (req, res) => {
-    
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    if (req.method === 'POST') {
-        const { mailgunApiKey, mailgunDomain, uid } = req.body;
-
-        if (!mailgunApiKey || !mailgunDomain) {
-            res.status(400).send('Missing mailgunApiKey or mailgunDomain');
-            return;
-        }
-
-        let encryptedMailgunApiKey;
+    if (req.method === 'GET') {
+        const { uid } = req.query;
 
         try {
-            encryptedMailgunApiKey = await encryptText(mailgunApiKey);
-            console.log(encryptedMailgunApiKey);
-        } catch (err) {
-            return res.status(500).send(`Encryption failed, ${err}`);
-        }
+            // Get the document snapshot
+            const docSnapshot = await db.collection('clients').doc(uid).get();
 
-        try {
-            await db.collection('clients').doc(uid).set({
-                mailgunApiKey: encryptedMailgunApiKey,
-                mailgunDomain: mailgunDomain,
-            });
-            res.status(200).send(`keys: ${encryptedMailgunApiKey}`);
+            // Check if the document exists
+            if (!docSnapshot.exists) {
+                return res.status(404).send('Document not found');
+            }
+
+            // Extract the data from the document snapshot
+            const clientData = docSnapshot.data();
+            console.log(clientData);
+            // Return the data as a response
+            res.status(200).json(clientData);
         } catch (err) {
-            return res.status(500).send(
-                `An error occurred while processing your request': ${err}`
-            );
+            return res
+                .status(500)
+                .send(
+                    `An error occurred while processing your request: ${err}`
+                );
         }
     }
 };
