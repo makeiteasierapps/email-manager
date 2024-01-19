@@ -1,7 +1,10 @@
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
 
 dotenv.config();
+const mailgun = new Mailgun(formData);
 
 const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
     // Fetch the user document from Firestore
