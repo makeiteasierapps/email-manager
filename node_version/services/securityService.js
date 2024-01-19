@@ -3,6 +3,8 @@ import { KeyManagementServiceClient } from '@google-cloud/kms';
 
 dotenv.config();
 
+process.env.GOOGLE_APPLICATION_CREDENTIALS
+
 const keyName = process.env.KMS_KEY_NAME;
 
 export const encryptText = async (plaintext) => {
