@@ -25,35 +25,47 @@ export default async (req, res) => {
             const clientDomain = recipient.split('@')[1];
 
             // Search the client collection for a document with the extracted domain
-            const clientDoc = await db
+            const clientDocs = await db
                 .collection('clients')
                 .where('mailgunDomain', '==', clientDomain)
                 .get();
 
-            // If no client is found, return an error
-            if (clientDoc.empty) {
-                return res.status(404).send('Client not found');
+            let uid;
+            let emailsSnapshot;
+            for (const doc of clientDocs.docs) {
+                // Skip the admin document
+                if (doc.data().admin) {
+                    continue;
+                }
+
+                // Check each client's email collection for the matching to_email
+                emailsSnapshot = await db
+                    .collection('clients')
+                    .doc(doc.id)
+                    .collection('emails')
+                    .where('to_email', '==', sender)
+                    .get();
+
+                if (!emailsSnapshot.empty) {
+                    uid = doc.id; // Found the client with the matching email
+
+                    break; // Exit the loop after finding the matching client
+                }
             }
 
-            // Get the uid of the client
-            const uid = clientDoc.docs[0].id;
-
-            // Use the uid to grab the email collection
-            const emails = db
-                .collection('clients')
-                .doc(uid)
-                .collection('emails');
-
-            const snapshot = await emails.where('to_email', '==', sender).get();
+            if (!uid) {
+                return res.status(404).send('Client not found');
+            }
 
             let emailChain;
             let toName;
 
-            snapshot.forEach((doc) => {
+            emailsSnapshot.forEach((doc) => {
                 const emailUpdate = { role: 'user', content: receivedEmail };
                 emailChain = [...doc.data().email, emailUpdate];
-                
+
                 toName = doc.data().to_name;
+
                 doc.ref.update({
                     email: FieldValue.arrayUnion(emailUpdate),
                     response_received: true,
