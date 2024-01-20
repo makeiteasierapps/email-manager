@@ -31,6 +31,8 @@ if (process.env.NODE_ENV === 'production') {
             process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath;
         })
         .catch(console.error);
+} else {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS;
 }
 
 const keyName = process.env.KMS_KEY_NAME;

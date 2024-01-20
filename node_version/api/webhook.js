@@ -27,7 +27,7 @@ export default async (req, res) => {
             // Search the client collection for a document with the extracted domain
             const clientDoc = await db
                 .collection('clients')
-                .where('mailgun-domain', '==', clientDomain)
+                .where('mailgunDomain', '==', clientDomain)
                 .get();
 
             // If no client is found, return an error
