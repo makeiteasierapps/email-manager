@@ -1,3 +1,5 @@
+import { db } from '../db.js';
+import { decryptText } from './securityService.js';
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
 import dotenv from 'dotenv';
@@ -7,11 +9,19 @@ dotenv.config();
 const mailgun = new Mailgun(formData);
 
 const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
+    let mailgunApiKey;
+    let mailgunDomain;
     // Fetch the user document from Firestore
-    const userDoc = await db.collection('clients').doc(uid).get();
-    const userData = userDoc.data();
-    const mailgunApiKey = userData['mailgunApiKey'];
-    const mailgunDomain = userData['mailgunDomain'];
+    try {
+        const userDoc = await db.collection('clients').doc(uid).get();
+        const userData = userDoc.data();
+
+        const encrytedMailgunKey = userData['mailgunApiKey'];
+        mailgunApiKey = await decryptText(encrytedMailgunKey);
+        mailgunDomain = userData['mailgunDomain'];
+    } catch (err) {
+        console.error(err);
+    }
 
     // Initialize the Mailgun client with the API key from the user document
     const client = mailgun.client({

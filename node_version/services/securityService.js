@@ -7,7 +7,7 @@ import { KeyManagementServiceClient } from '@google-cloud/kms';
 dotenv.config();
 
 // This function will handle the creation of the credentials file
-async function createCredentialsFile(encodedCredentials) {
+const createCredentialsFile = async (encodedCredentials) => {
     // Decode the base64 credentials
     const credentials = Buffer.from(encodedCredentials, 'base64').toString(
         'utf8'
@@ -21,7 +21,7 @@ async function createCredentialsFile(encodedCredentials) {
 
     // Return the file path
     return tempFilePath;
-}
+};
 
 // Use the function in your production environment setup
 if (process.env.NODE_ENV === 'production') {
