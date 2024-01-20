@@ -11,9 +11,17 @@ const sendEmail = async (uid, template, batch) => {
     // Fetch the user document from Firestore
     const userDoc = await db.collection('clients').doc(uid).get();
     const userData = userDoc.data();
+
+    // Check if the user has their own Mailgun config, bypass trial logic if true
+    if (!userData.hasMailgunConfig) {
+        // Check if the user is on trial and has messages left
+        if (userData.onTrial && userData.messagesLeft <= 0) {
+            throw new Error('Trial has ended, no messages left');
+        }
+    }
+
     const encryptedMailgunApiKey = userData['mailgunApiKey'];
     const mailgunApiKey = await decryptText(encryptedMailgunApiKey);
-
     const mailgunDomain = userData['mailgunDomain'];
 
     // Initialize the Mailgun client with the API key from the user document
@@ -33,6 +41,16 @@ const sendEmail = async (uid, template, batch) => {
     try {
         const res = await client.messages.create(mailgunDomain, messageData);
         if (res.status === 200) {
+            // If the user is on trial and does not have their own Mailgun config, decrement the messagesLeft field
+            if (userData.onTrial && !userData.hasMailgunConfig) {
+                await db
+                    .collection('clients')
+                    .doc(uid)
+                    .update({
+                        messagesLeft: userData.messagesLeft - 1,
+                    });
+            }
+
             let docRef = db
                 .collection('clients')
                 .doc(uid)

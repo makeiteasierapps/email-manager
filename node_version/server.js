@@ -8,6 +8,7 @@ import webhook from './api/webhook.js';
 import update from './api/profile/update.js';
 import create from './api/profile/create.js';
 import profile from './api/profile.js';
+import startTrial from './api/start-trial.js';
 const app = express();
 
 app.use(cors());
@@ -21,5 +22,6 @@ app.use('/api/webhook', webhook);
 app.use('/api/profile/update', update);
 app.use ('/api/profile/create', create);
 app.use ('/api/profile', profile);
+app.use ('/api/start-trial', startTrial);
 
 app.listen(5001, () => console.log('Server running on port 5001'));

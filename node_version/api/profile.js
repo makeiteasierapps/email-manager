@@ -15,7 +15,7 @@ export default async (req, res) => {
 
             // Extract the data from the document snapshot
             const clientData = docSnapshot.data();
-            console.log(clientData);
+
             // Return the data as a response
             res.status(200).json(clientData);
         } catch (err) {
