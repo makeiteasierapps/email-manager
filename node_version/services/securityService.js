@@ -1,14 +1,37 @@
 import dotenv from 'dotenv';
+import { writeFile } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { KeyManagementServiceClient } from '@google-cloud/kms';
 
 dotenv.config();
 
-process.env.NODE_ENV === 'production'
-    ? Buffer.from(
-          process.env.GOOGLE_APPLICATION_CREDENTIALS,
-          'base64'
-      ).toString('utf8')
-    : process.env.GOOGLE_APPLICATION_CREDENTIALS;
+// This function will handle the creation of the credentials file
+async function createCredentialsFile(encodedCredentials) {
+    // Decode the base64 credentials
+    const credentials = Buffer.from(encodedCredentials, 'base64').toString(
+        'utf8'
+    );
+
+    // Generate a file path in the temporary directory
+    const tempFilePath = join(tmpdir(), 'google-application-credentials.json');
+
+    // Write the credentials to the temporary file
+    await writeFile(tempFilePath, credentials);
+
+    // Return the file path
+    return tempFilePath;
+}
+
+// Use the function in your production environment setup
+if (process.env.NODE_ENV === 'production') {
+    // Call the function and set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+    createCredentialsFile(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+        .then((tempFilePath) => {
+            process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath;
+        })
+        .catch(console.error);
+}
 
 const keyName = process.env.KMS_KEY_NAME;
 
