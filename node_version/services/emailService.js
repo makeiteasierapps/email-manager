@@ -21,6 +21,7 @@ const sendEmail = async (uid, template, batch) => {
     }
 
     const encryptedMailgunApiKey = userData['mailgunApiKey'];
+    console.log(encryptedMailgunApiKey);
     const mailgunApiKey = await decryptText(encryptedMailgunApiKey);
     const mailgunDomain = userData['mailgunDomain'];
 
