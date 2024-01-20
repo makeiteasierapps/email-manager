@@ -80,7 +80,7 @@ export default async (req, res) => {
                 clientEmail: recipient,
             });
 
-            snapshot.forEach((doc) => {
+            emailsSnapshot.forEach((doc) => {
                 const emailUpdate = { role: 'assistant', content: aiResponse };
                 doc.ref.update({
                     email: FieldValue.arrayUnion(emailUpdate),
