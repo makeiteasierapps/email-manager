@@ -4,9 +4,10 @@ import { KeyManagementServiceClient } from '@google-cloud/kms';
 dotenv.config();
 
 process.env.NODE_ENV === 'production'
-    ? Buffer.from(process.env.GOOGLE_CREDENTIALS_ENCODED, 'base64').toString(
-          'utf8'
-      )
+    ? Buffer.from(
+          process.env.GOOGLE_APPLICATION_CREDENTIALS,
+          'base64'
+      ).toString('utf8')
     : process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 const keyName = process.env.KMS_KEY_NAME;
