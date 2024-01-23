@@ -21,7 +21,7 @@ const sendEmail = async (uid, template, batch) => {
     }
 
     const encryptedMailgunApiKey = userData['mailgunApiKey'];
-    
+
     const mailgunApiKey = await decryptText(encryptedMailgunApiKey);
     const mailgunDomain = userData['mailgunDomain'];
 
@@ -37,6 +37,7 @@ const sendEmail = async (uid, template, batch) => {
         subject: template.subject,
         text: template.message,
         html: `<html><body>${template.message}</body></html>`,
+        'h:Message-ID': `<${uid}@${mailgunDomain}>`,
     };
 
     try {
@@ -58,6 +59,7 @@ const sendEmail = async (uid, template, batch) => {
                 .collection('emails')
                 .doc();
             batch.set(docRef, {
+                id: res.id,
                 to_email: template.to_email,
                 to_name: template.to_name,
                 to_company: template.to_company,

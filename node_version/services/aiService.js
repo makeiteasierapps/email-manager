@@ -35,6 +35,7 @@ const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
         subject: 'A response from our funny and playful AI assistant',
         text: email,
         html: `<html><body>${email}</body></html>`,
+        'h:Message-ID': `<${uid}@${mailgunDomain}>`,
     };
 
     try {

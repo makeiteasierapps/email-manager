@@ -14,44 +14,23 @@ const verify = ({ timestamp, token, signature }) => {
 export default async (req, res) => {
     try {
         if (req.method === 'POST') {
+            console.log(req.body['In-Reply-To']);
             const { timestamp, token, signature, sender, recipient } = req.body;
             const receivedEmail = req.body['stripped-text'];
+            const emailResponseId = req.body['In-Reply-To'];
+            const uid = emailResponseId.match(/<([^@]+)@/)[1];
 
             if (!verify({ timestamp, token, signature })) {
                 return res.status(403).send('Invalid signature');
             }
 
-            // Extract the domain from the recipient email
-            const clientDomain = recipient.split('@')[1];
-
-            // Search the client collection for a document with the extracted domain
-            const clientDocs = await db
+            // Check each client's email collection for the matching to_email
+            const emailsSnapshot = await db
                 .collection('clients')
-                .where('mailgunDomain', '==', clientDomain)
+                .doc(uid)
+                .collection('emails')
+                .where('to_email', '==', sender)
                 .get();
-
-            let uid;
-            let emailsSnapshot;
-            for (const doc of clientDocs.docs) {
-                // Skip the admin document
-                if (doc.data().admin) {
-                    continue;
-                }
-
-                // Check each client's email collection for the matching to_email
-                emailsSnapshot = await db
-                    .collection('clients')
-                    .doc(doc.id)
-                    .collection('emails')
-                    .where('to_email', '==', sender)
-                    .get();
-
-                if (!emailsSnapshot.empty) {
-                    uid = doc.id; // Found the client with the matching email
-
-                    break; // Exit the loop after finding the matching client
-                }
-            }
 
             if (!uid) {
                 return res.status(404).send('Client not found');
