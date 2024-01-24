@@ -38,8 +38,10 @@ export default async (req, res) => {
 
             let emailChain;
             let toName;
+            let aiLimit = 0;
 
             emailsSnapshot.forEach((doc) => {
+                aiLimit = doc.data().AiLimit || 0;
                 const emailUpdate = { role: 'user', content: receivedEmail };
                 emailChain = [...doc.data().email, emailUpdate];
 
@@ -57,12 +59,14 @@ export default async (req, res) => {
                 toName,
                 toEmail: sender,
                 clientEmail: recipient,
+                aiLimit,
             });
 
             emailsSnapshot.forEach((doc) => {
                 const emailUpdate = { role: 'assistant', content: aiResponse };
                 doc.ref.update({
                     email: FieldValue.arrayUnion(emailUpdate),
+                    AiLimit: FieldValue.increment(1),
                 });
             });
             res.send('OK');

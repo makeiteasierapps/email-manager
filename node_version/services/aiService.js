@@ -30,9 +30,9 @@ const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
     });
 
     const messageData = {
-        from: `Playful Assistant <${clientEmail}>`,
+        from: `Shaun's AI Assistant <${clientEmail}>`,
         to: `${toName} <${toEmail}>`,
-        subject: 'A response from our funny and playful AI assistant',
+        subject: 'Email Manager Demo',
         text: email,
         html: `<html><body>${email}</body></html>`,
         'h:Message-ID': `<${uid}@${mailgunDomain}>`,
@@ -54,7 +54,23 @@ export const aiEmailResponse = async ({
     toName,
     toEmail,
     clientEmail,
+    aiLimit,
 }) => {
+    if (aiLimit > 5) {
+        const endCommunicationEmail = await sendAiEmail({
+            uid,
+            toEmail,
+            toName,
+            clientEmail,
+            email: `You have reached the end of the trial. Thank you for checking things out! To contact Shaun: <a href="https://www.linkedin.com/in/shaun-o-940b591b5/" target="_blank">LinkedIn</a><a href="https://github.com/makeiteasierapps" target="_blank">GitHub</a>`,
+        });
+
+        if (endCommunicationEmail.success) {
+            return endCommunicationEmail;
+        } else {
+            throw new Error(endCommunicationEmail.message);
+        }
+    }
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
     const messages = [
