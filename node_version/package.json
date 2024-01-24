@@ -19,6 +19,8 @@
     "mailparser": "^3.6.6",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^3.0.2",
-    "openai": "^4.24.7"
+    "openai": "^4.24.7",
+    "passport": "^0.7.0",
+    "passport-linkedin-oauth2": "^2.0.0"
   }
 }
