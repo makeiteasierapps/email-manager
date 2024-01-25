@@ -31,6 +31,8 @@ const sendEmail = async (uid, template, batch) => {
         key: mailgunApiKey,
     });
 
+    template.to_email = template.to_email.toLowerCase();
+
     const messageData = {
         from: `${template.from_name} <${template.from_email}>`,
         to: `${template.to_name} <${template.to_email}>`,

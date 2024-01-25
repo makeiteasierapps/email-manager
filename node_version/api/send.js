@@ -20,7 +20,6 @@ export default async (req, res) => {
         if (err.message === 'Trial has ended, no messages left') {
             res.status(403).send(err.message);
         } else {
-            // Log the actual error for debugging purposes
             console.error(err);
             res.status(500).send('An error occurred while sending emails');
         }
