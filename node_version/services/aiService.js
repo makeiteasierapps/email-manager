@@ -134,6 +134,8 @@ export const aiEmailResponse = async ({
         },
         ...emailChain,
     ];
+    console.log('emailChain', emailChain);
+    console.log('messages', messages);
     const completion = await openai.chat.completions.create({
         messages: messages,
         model: 'gpt-4-1106-preview',
