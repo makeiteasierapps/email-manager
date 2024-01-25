@@ -82,7 +82,6 @@ export const aiEmailResponse = async ({
         }
     }
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
-
     const messages = [
         {
             role: 'system',
@@ -135,12 +134,11 @@ export const aiEmailResponse = async ({
         },
         ...emailChain,
     ];
-
     const completion = await openai.chat.completions.create({
         messages: messages,
         model: 'gpt-4-1106-preview',
     });
-
+    console.log('completion', completion);
     const emailResult = await sendAiEmail({
         uid,
         docId,
@@ -149,6 +147,8 @@ export const aiEmailResponse = async ({
         clientEmail,
         email: completion.choices[0].message.content,
     });
+
+    console.log('emailResult', emailResult);
 
     if (emailResult.success) {
         return completion.choices[0].message.content;
