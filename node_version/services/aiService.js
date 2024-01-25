@@ -8,15 +8,22 @@ import OpenAI from 'openai';
 dotenv.config();
 const mailgun = new Mailgun(formData);
 
-const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
+const sendAiEmail = async ({
+    uid,
+    docId,
+    toEmail,
+    toName,
+    clientEmail,
+    email,
+}) => {
     let mailgunApiKey;
     let mailgunDomain;
     // Fetch the user document from Firestore
     try {
         const userDoc = await db.collection('clients').doc(uid).get();
         const userData = userDoc.data();
-
         const encrytedMailgunKey = userData['mailgunApiKey'];
+
         mailgunApiKey = await decryptText(encrytedMailgunKey);
         mailgunDomain = userData['mailgunDomain'];
     } catch (err) {
@@ -35,7 +42,7 @@ const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
         subject: 'Email Manager Demo',
         text: email,
         html: `<html><body>${email}</body></html>`,
-        'h:Message-ID': `<${uid}@${mailgunDomain}>`,
+        'h:Message-ID': `<${uid}-${docId}@${mailgunDomain}>`,
     };
 
     try {
@@ -44,29 +51,32 @@ const sendAiEmail = async ({ uid, toEmail, toName, clientEmail, email }) => {
         return { success: true, message: 'Email sent successfully.' };
     } catch (err) {
         console.error(err);
+
         return { success: false, message: err.message };
     }
 };
 
 export const aiEmailResponse = async ({
     uid,
+    docId,
     emailChain,
     toName,
     toEmail,
     clientEmail,
     aiLimit,
 }) => {
-    if (aiLimit > 5) {
+    if (aiLimit > 3) {
+        const email = `You have reached the end of the trial. Thank you for checking things out! To contact Shaun: <a href="https://www.linkedin.com/in/shaun-o-940b591b5/" target="_blank">LinkedIn</a> <a href="https://github.com/makeiteasierapps" target="_blank">GitHub</a>`;
         const endCommunicationEmail = await sendAiEmail({
             uid,
             toEmail,
             toName,
             clientEmail,
-            email: `You have reached the end of the trial. Thank you for checking things out! To contact Shaun: <a href="https://www.linkedin.com/in/shaun-o-940b591b5/" target="_blank">LinkedIn</a><a href="https://github.com/makeiteasierapps" target="_blank">GitHub</a>`,
+            email,
         });
 
         if (endCommunicationEmail.success) {
-            return endCommunicationEmail;
+            return email;
         } else {
             throw new Error(endCommunicationEmail.message);
         }
@@ -133,6 +143,7 @@ export const aiEmailResponse = async ({
 
     const emailResult = await sendAiEmail({
         uid,
+        docId,
         toEmail,
         toName,
         clientEmail,

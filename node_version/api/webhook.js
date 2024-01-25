@@ -13,47 +13,47 @@ const verify = ({ timestamp, token, signature }) => {
 
 export default async (req, res) => {
     if (req.method === 'POST') {
-        console.log(req.body['In-Reply-To']);
         const { timestamp, token, signature, sender, recipient } = req.body;
         const receivedEmail = req.body['stripped-text'];
         const emailResponseId = req.body['In-Reply-To'];
-        const uid = emailResponseId.match(/<([^@]+)@/)[1];
+        const match = emailResponseId.match(/<([^@-]+)-([^@]+)@/);
+        if (!match) {
+            return res.status(400).send('Invalid In-Reply-To format');
+        }
+        const uid = match[1];
+        const docId = match[2];
 
         if (!verify({ timestamp, token, signature })) {
             return res.status(403).send('Invalid signature');
         }
 
-        // Check each client's email collection for the matching to_email
-        const emailsSnapshot = await db
+        const emailDocRef = db
             .collection('clients')
             .doc(uid)
             .collection('emails')
-            .where('to_email', '==', sender)
-            .get();
+            .doc(docId);
 
-        if (!uid) {
-            return res.status(404).send('Client not found');
+        const emailDoc = await emailDocRef.get();
+
+        if (!emailDoc.exists) {
+            return res.status(404).send('Email document not found');
         }
 
-        let emailChain;
-        let toName;
-        let aiLimit = 0;
+        const emailData = emailDoc.data();
+        const emailUpdate = { role: 'user', content: receivedEmail };
+        const aiLimit = emailData.AiLimit || 0;
+        const emailChain = [...emailData.email, emailUpdate];
+        const toName = emailData.to_name;
 
-        emailsSnapshot.forEach((doc) => {
-            aiLimit = doc.data().AiLimit || 0;
-            const emailUpdate = { role: 'user', content: receivedEmail };
-            emailChain = [...doc.data().email, emailUpdate];
-
-            toName = doc.data().to_name;
-
-            doc.ref.update({
-                email: FieldValue.arrayUnion(emailUpdate),
-                response_received: true,
-            });
+        // Update the document with the new user email
+        await emailDocRef.update({
+            email: FieldValue.arrayUnion(emailUpdate),
+            response_received: true,
         });
 
         const aiResponse = await aiEmailResponse({
             uid,
+            docId,
             emailChain,
             toName,
             toEmail: sender,
@@ -61,12 +61,11 @@ export default async (req, res) => {
             aiLimit,
         });
 
-        emailsSnapshot.forEach((doc) => {
-            const emailUpdate = { role: 'assistant', content: aiResponse };
-            doc.ref.update({
-                email: FieldValue.arrayUnion(emailUpdate),
-                AiLimit: FieldValue.increment(1),
-            });
+        // Update the document with the AI response
+        const assistantEmailUpdate = { role: 'assistant', content: aiResponse };
+        await emailDocRef.update({
+            email: FieldValue.arrayUnion(assistantEmailUpdate),
+            AiLimit: FieldValue.increment(1),
         });
         res.send('OK');
     } else {

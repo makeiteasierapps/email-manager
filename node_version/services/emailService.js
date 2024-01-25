@@ -33,13 +33,17 @@ const sendEmail = async (uid, template, batch) => {
 
     template.to_email = template.to_email.toLowerCase();
 
+    // Generate a unique document ID
+    let docId = db.collection('clients').doc().id;
+    console.log('doc_id', docId);
+
     const messageData = {
         from: `${template.from_name} <${template.from_email}>`,
         to: `${template.to_name} <${template.to_email}>`,
         subject: template.subject,
         text: template.message,
         html: `<html><body>${template.message}</body></html>`,
-        'h:Message-ID': `<${uid}@${mailgunDomain}>`,
+        'h:Message-ID': `<${uid}-${docId}@${mailgunDomain}>`,
     };
 
     try {
@@ -59,9 +63,8 @@ const sendEmail = async (uid, template, batch) => {
                 .collection('clients')
                 .doc(uid)
                 .collection('emails')
-                .doc();
+                .doc(docId);
             batch.set(docRef, {
-                id: res.id,
                 to_email: template.to_email,
                 to_name: template.to_name,
                 to_company: template.to_company,
