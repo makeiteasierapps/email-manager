@@ -35,7 +35,6 @@ const sendEmail = async (uid, template, batch) => {
 
     // Generate a unique document ID
     let docId = db.collection('clients').doc().id;
-    console.log('doc_id', docId);
 
     const messageData = {
         from: `${template.from_name} <${template.from_email}>`,

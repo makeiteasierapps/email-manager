@@ -61,7 +61,6 @@ export default async (req, res) => {
             clientEmail: recipient,
             aiLimit,
         });
-        console.log('aiResponse', aiResponse);
 
         // Update the document with the AI response
         const assistantEmailUpdate = { role: 'assistant', content: aiResponse };

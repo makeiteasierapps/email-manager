@@ -134,13 +134,13 @@ export const aiEmailResponse = async ({
         },
         ...emailChain,
     ];
-    console.log('emailChain', emailChain);
-    console.log('messages', messages);
+
     const completion = await openai.chat.completions.create({
         messages: messages,
         model: 'gpt-4-1106-preview',
+        stream: true,
     });
-    console.log('completion', completion);
+
     const emailResult = await sendAiEmail({
         uid,
         docId,
@@ -149,8 +149,6 @@ export const aiEmailResponse = async ({
         clientEmail,
         email: completion.choices[0].message.content,
     });
-
-    console.log('emailResult', emailResult);
 
     if (emailResult.success) {
         return completion.choices[0].message.content;
