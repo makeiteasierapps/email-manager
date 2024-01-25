@@ -145,7 +145,7 @@ export const aiEmailResponse = async ({
 
     for await (const chunk of completionStream) {
         // Append each chunk of content to the full response
-        fullResponseContent += chunk.choices[0].message.content;
+        fullResponseContent += chunk.choices[0].delta.content;
     }
 
     const emailResult = await sendAiEmail({
