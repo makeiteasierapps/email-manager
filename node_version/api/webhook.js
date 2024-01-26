@@ -13,7 +13,6 @@ const verify = ({ timestamp, token, signature }) => {
 
 export default async (req, res) => {
     if (req.method === 'POST') {
-        console.log(req.body)
         const { timestamp, token, signature, sender, recipient } = req.body;
         const receivedEmail = req.body['stripped-text'];
         const emailResponseId = req.body['In-Reply-To'];
