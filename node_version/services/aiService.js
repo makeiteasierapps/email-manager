@@ -29,6 +29,7 @@ const sendAiEmail = async ({
     } catch (err) {
         console.error(err);
     }
+    console.log(uid, docId);
 
     // Initialize the Mailgun client with the API key from the user document
     const client = mailgun.client({
@@ -44,6 +45,8 @@ const sendAiEmail = async ({
         html: `<html><body>${email}</body></html>`,
         'h:Message-ID': `<${uid}-${docId}@${mailgunDomain}>`,
     };
+
+    console.log(messageData);
 
     try {
         await client.messages.create(mailgunDomain, messageData);

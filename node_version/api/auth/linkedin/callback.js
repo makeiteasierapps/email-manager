@@ -48,7 +48,7 @@ export default async (req, res) => {
                 };
 
                 let userRecord;
-                const userUid = `linkedin:${userProfile.id}`;
+                const userUid = userProfile.id;
 
                 // Check if the user already exists
                 try {
@@ -59,6 +59,7 @@ export default async (req, res) => {
                         userRecord = await admin.auth().createUser({
                             uid: userUid,
                             email: userProfile.email,
+                            photoURL: userProfile.profilePicture,
                             emailVerified: true,
                             displayName: `${userProfile.firstName} ${userProfile.lastName}`,
                             disabled: false,
