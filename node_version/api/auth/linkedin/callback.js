@@ -5,9 +5,8 @@ import { db } from '../../../db.js';
 
 export default async (req, res) => {
     if (req.method === 'GET') {
-        const { code, state, error, error_description } = req.query;
-        console.log(req.query);
-        // Check if there is an error query parameter
+        const { code, error, error_description } = req.query;
+
         if (error) {
             // Handle failed authentication here
             console.error('LinkedIn authentication failed:', error_description);
@@ -34,7 +33,6 @@ export default async (req, res) => {
                     }
                 );
 
-                // Access token is available in accessTokenResponse.data.access_token
                 idToken = accessTokenResponse.data.id_token;
                 const accessToken = accessTokenResponse.data.access_token;
 
@@ -49,19 +47,50 @@ export default async (req, res) => {
                     profilePicture: decodedIdToken.picture,
                 };
 
-                console.log(userProfile);
+                let userRecord;
+                const userUid = `linkedin:${userProfile.id}`;
 
-                const uid = `linkedin:${userProfile.id}`;
-                const firebaseToken = await admin.auth().createCustomToken(uid);
-                res.send(
-                    signInFirebaseTemplate(
-                        firebaseToken,
-                        userProfile.firstName + ' ' + userProfile.lastName,
-                        userProfile.profilePicture,
-                        accessToken,
-                        uid
-                    )
+                // Check if the user already exists
+                try {
+                    userRecord = await admin.auth().getUser(userUid);
+                } catch (userNotFoundError) {
+                    // If user does not exist, create a new user account with Firebase Admin SDK
+                    if (userNotFoundError.code === 'auth/user-not-found') {
+                        userRecord = await admin.auth().createUser({
+                            uid: userUid,
+                            email: userProfile.email,
+                            emailVerified: true,
+                            displayName: `${userProfile.firstName} ${userProfile.lastName}`,
+                            disabled: false,
+                        });
+                    } else {
+                        // Handle other errors
+                        throw userNotFoundError;
+                    }
+                }
+
+                // Create a custom token for the new user
+                const firebaseToken = await admin
+                    .auth()
+                    .createCustomToken(userRecord.uid);
+
+                // Update the database with the user's LinkedIn information
+                await db.collection('clients').doc(userRecord.uid).set(
+                    {
+                        linkedinAccessToken: accessToken,
+                        displayName: userRecord.displayName,
+                        photoURL: userRecord.photoURL,
+                    },
+                    { merge: true }
                 );
+                // Redirect the user to the client application with the custom token
+                console.log(process.env.FRONTEND_URL);
+
+                const redirectUrl = `${
+                    process.env.FRONTEND_URL
+                }/login?token=${encodeURIComponent(firebaseToken)}`;
+
+                res.redirect(redirectUrl);
             } catch (error) {
                 // Handle errors from the access token request
                 console.error('Error fetching access token:', error);
@@ -70,75 +99,7 @@ export default async (req, res) => {
                     .json({ message: 'Internal Server Error' });
             }
         } else {
-            // Only GET method is supported for the callback
             return res.status(405).json({ message: 'Method Not Allowed' });
         }
     }
 };
-
-function signInFirebaseTemplate(
-    token,
-    displayName,
-    photoURL,
-    linkedinAccessToken,
-    uid
-) {
-    return `
-    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
-    <script src="promise.min.js"></script><!-- Promise Polyfill for older browsers -->
-    <script>
-      var token = '${token}';
-      var displayName = '${displayName}';
-      var photoURL = '${photoURL}';
-      var linkedinAccessToken = '${linkedinAccessToken}';
-      var uid = '${uid}'; // Ensure uid is properly assigned
-      var config = {
-        apiKey: '${process.env.FIREBASE_API_KEY}', 
-        authDomain: '${process.env.FIREBASE_AUTH_DOMAIN}',
-        projectId: '${process.env.FIREBASE_PROJECT_ID}',
-      };
-      // Initialize error logging
-      var errorLog = function(error) {
-        console.error('Error during Firebase operations:', error);
-      };
-      // Initialize the Firebase app
-      var tempApp;
-      try {
-        tempApp = firebase.initializeApp(config, '_temp_');
-      } catch (error) {
-        errorLog(error);
-      }
-      
-      if (tempApp) {
-        tempApp.auth().signInWithCustomToken(token).then(function() {
-          var db = tempApp.firestore();
-          return db.collection('clients').doc(uid).set({
-            linkedinAccessToken: linkedinAccessToken,
-            displayName: displayName,
-            photoURL: photoURL
-          }, { merge: true });
-        })
-        .then(function() {
-          // Delete temporary Firebase app and sign in the default Firebase app, then close the popup.
-          var defaultApp;
-          try {
-            defaultApp = firebase.initializeApp(config);
-          } catch (error) {
-            errorLog(error);
-          }
-          if (defaultApp) {
-            return Promise.all([
-                defaultApp.auth().signInWithCustomToken(token),
-                tempApp.delete()
-            ]);
-          }
-        })
-        .then(function() {
-          window.close(); // We're done! Closing the popup.
-        })
-        .catch(errorLog);
-      }
-    </script>`;
-}

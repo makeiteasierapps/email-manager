@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import send from './api/send.js';
 import sendFollowup from './api/send-followup.js';
 import processFile from './api/process-file.js';
@@ -11,11 +12,13 @@ import profile from './api/profile.js';
 import startTrial from './api/start-trial.js';
 import linkedInOauth from './api/auth/linkedin.js';
 import linkedInCallback from './api/auth/linkedin/callback.js';
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use('/api/send', send);
 app.use('/api/send-followup', sendFollowup);
 app.use('/api/process-file', processFile);
