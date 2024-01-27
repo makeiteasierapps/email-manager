@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import passport from 'passport';
 import send from './api/send.js';
 import sendFollowup from './api/send-followup.js';
 import processFile from './api/process-file.js';
@@ -17,7 +16,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
 app.use('/api/send', send);
 app.use('/api/send-followup', sendFollowup);
 app.use('/api/process-file', processFile);
@@ -27,7 +25,7 @@ app.use('/api/profile/update', update);
 app.use('/api/profile/create', create);
 app.use('/api/profile', profile);
 app.use('/api/start-trial', startTrial);
-app.use('/api/auth/linkedin', linkedInOauth);
 app.use('/api/auth/linkedin/callback', linkedInCallback);
+app.use('/api/auth/linkedin', linkedInOauth);
 
 app.listen(5001, () => console.log('Server running on port 5001'));

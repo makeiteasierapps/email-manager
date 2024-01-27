@@ -1,4 +1,3 @@
-import { encryptText } from '../../services/securityService.js';
 import { db } from '../../db.js';
 
 export default async (req, res) => {
