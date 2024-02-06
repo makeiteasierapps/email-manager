@@ -12,7 +12,8 @@ env/
 venv/ 
 ENV/ 
 env.bak/ 
-venv.bak/ 
+venv.bak/
+*.DS_Store
 
 firebase_service_account.json
 node_version/node_modules
