@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon server.js",
     "start": "NODE_ENV=production node server.js"

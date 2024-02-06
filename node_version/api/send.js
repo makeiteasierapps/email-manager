@@ -1,6 +1,6 @@
 import { handleEmailSending } from '../services/emailService.js';
 
-export async function send(req, res){
+export default async function send(req, res){
     try {
         if (req.method === 'OPTIONS') {
             res.status(200).end();

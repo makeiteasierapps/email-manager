@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-export async function emailData(req, res){
+export default async function emailData(req, res){
     try {
         const uid = req.query.uid;
         if (req.method === 'GET') {

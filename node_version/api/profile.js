@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-export async function profile(req, res){
+export default async function profile(req, res){
     if (req.method === 'GET') {
         const { uid } = req.query;
 

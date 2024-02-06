@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import admin from 'firebase-admin';
 import { db } from '../../../db.js';
 
-export async function callback(req, res) {
+export default async function callback(req, res) {
     if (req.method === 'GET') {
         const { code, error, error_description } = req.query;
 

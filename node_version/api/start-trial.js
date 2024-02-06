@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-export async function startTrial(req, res) {
+export default async function startTrial(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;

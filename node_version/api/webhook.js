@@ -11,7 +11,7 @@ const verify = ({ timestamp, token, signature }) => {
     return encodedToken === signature;
 };
 
-export async function webhook(req, res){
+export default async function webhook(req, res){
     if (req.method === 'POST') {
         console.log(req.body);
         const { timestamp, token, signature, sender, recipient } = req.body;

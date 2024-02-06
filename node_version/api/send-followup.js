@@ -1,6 +1,6 @@
 import { handleFollowUps } from '../services/emailService.js';
 
-export async function sendFollowup(req, res) {
+export default async function sendFollowup(req, res) {
     try {
         if (req.method === 'GET') {
             const followUpsSent = await handleFollowUps();

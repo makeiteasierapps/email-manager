@@ -38,4 +38,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Export the app for Google Cloud Functions
-exports.app = app;
+export { app };

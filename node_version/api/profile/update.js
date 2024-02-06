@@ -1,7 +1,7 @@
 import { encryptText } from '../../services/securityService.js';
 import { db } from '../../db.js';
 
-export async function update(req, res) {
+export default async function update(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;

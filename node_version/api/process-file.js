@@ -4,7 +4,7 @@ import { PassThrough } from 'stream';
 
 const upload = multer();
 
-export async function processFile(req, res) {
+export default async function processFile(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
