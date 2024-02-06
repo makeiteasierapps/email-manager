@@ -1,6 +1,6 @@
 import { db } from '../../db.js';
 
-export default async (req, res) => {
+export async function create(req, res){
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;

@@ -31,4 +31,11 @@ app.use('/api/start-trial', startTrial);
 app.use('/api/auth/linkedin/callback', linkedInCallback);
 app.use('/api/auth/linkedin', linkedInOauth);
 
-app.listen(5001, () => console.log('Server running on port 5001'));
+// Conditionally start the server only if not running in a Google Cloud Function environment
+if (process.env.NODE_ENV !== 'production') {
+    const port = process.env.PORT || 5001;
+    app.listen(port, () => console.log(`Server running on port ${port}`));
+}
+
+// Export the app for Google Cloud Functions
+exports.app = app;

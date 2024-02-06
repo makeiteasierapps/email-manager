@@ -1,6 +1,6 @@
 import { handleFollowUps } from '../services/emailService.js';
 
-export default async (req, res) => {
+export async function sendFollowup(req, res) {
     try {
         if (req.method === 'GET') {
             const followUpsSent = await handleFollowUps();
@@ -13,4 +13,4 @@ export default async (req, res) => {
     } catch (err) {
         res.status(500).send('An error occurred while sending follow ups');
     }
-};
+}

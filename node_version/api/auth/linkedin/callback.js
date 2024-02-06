@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import admin from 'firebase-admin';
 import { db } from '../../../db.js';
 
-export default async (req, res) => {
+export async function callback(req, res) {
     if (req.method === 'GET') {
         const { code, error, error_description } = req.query;
 
@@ -103,4 +103,4 @@ export default async (req, res) => {
             return res.status(405).json({ message: 'Method Not Allowed' });
         }
     }
-};
+}

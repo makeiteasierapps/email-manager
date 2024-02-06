@@ -4,7 +4,7 @@ import { PassThrough } from 'stream';
 
 const upload = multer();
 
-export default (req, res) => {
+export async function processFile(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
@@ -37,4 +37,4 @@ export default (req, res) => {
     } else {
         res.status(405).send('Only POST operations are allowed on this route');
     }
-};
+}

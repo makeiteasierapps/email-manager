@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-export default async (req, res) => {
+export async function startTrial(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
@@ -47,4 +47,4 @@ export default async (req, res) => {
                 );
         }
     }
-};
+}
