@@ -23,15 +23,7 @@ const createCredentialsFile = async (encodedCredentials) => {
     return tempFilePath;
 };
 
-// Use the function in your production environment setup
-if (process.env.NODE_ENV === 'production') {
-    // Call the function and set the GOOGLE_APPLICATION_CREDENTIALS environment variable
-    createCredentialsFile(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-        .then((tempFilePath) => {
-            process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath;
-        })
-        .catch(console.error);
-} else {
+if (process.env.NODE_ENV === 'development') {
     process.env.GOOGLE_APPLICATION_CREDENTIALS;
 }
 
