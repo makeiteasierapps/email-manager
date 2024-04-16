@@ -1,40 +1,55 @@
-import multer from 'multer';
 import csv from 'csv-parser';
-import { PassThrough } from 'stream';
-
-const upload = multer();
+import Busboy from 'busboy';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { createWriteStream, createReadStream, unlinkSync } from 'fs';
 
 export default async function processFile(req, res) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
-    if (req.method === 'POST') {
-        upload.single('file')(req, res, (err) => {
-            if (err) {
-                return res.status(500).send('Upload error');
-            }
-
-            if (!req.file) {
-                return res.status(400).send('No file uploaded');
-            }
-
-            const results = [];
-            const bufferStream = new PassThrough();
-            bufferStream.end(req.file.buffer);
-            bufferStream
-                .pipe(csv())
-                .on('data', (data) => {
-                    results.push(data);
-                })
-                .on('end', () => {
-                    res.status(200).send({ results });
-                })
-                .on('error', (err) => {
-                    return res.status(500).send('CSV parsing error');
-                });
-        });
-    } else {
-        res.status(405).send('Only POST operations are allowed on this route');
+    if (req.method !== 'POST') {
+        return res.status(405).send('Only POST operations are allowed on this route');
     }
+
+    console.log('Processing POST request');
+    console.log('Content-Type:', req.headers['content-type']);
+
+    const busboy = new Busboy({ headers: req.headers });
+    const tmpDir = tmpdir();
+    let saveToPath;
+
+    busboy.on('file', (fieldname, file, filename) => {
+        console.log(`File [${fieldname}] with filename "${filename}" detected`);
+        const saveTo = join(tmpDir, filename);
+        saveToPath = saveTo;
+        file.pipe(createWriteStream(saveTo));
+    });
+
+    busboy.on('finish', () => {
+        console.log('Busboy finish event triggered');
+        if (!saveToPath) {
+            console.log('No file was uploaded');
+            return res.status(400).send('No file uploaded');
+        }
+
+        console.log(`Processing file at ${saveToPath}`);
+        const results = [];
+        createReadStream(saveToPath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => {
+                console.log('CSV parsing completed');
+                unlinkSync(saveToPath); // Clean up temp file
+                res.status(200).send({ results });
+            })
+            .on('error', (err) => {
+                console.error('Error during CSV parsing', err);
+                unlinkSync(saveToPath); // Clean up temp file
+                return res.status(500).send('CSV parsing error');
+            });
+    });
+
+    req.pipe(busboy);
 }
