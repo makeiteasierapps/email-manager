@@ -4,13 +4,11 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { createWriteStream, createReadStream, unlinkSync } from 'fs';
 
-export default async function processFile(req, res) {
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
+export default function processFile(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).send('Only POST operations are allowed on this route');
+        return res
+            .status(405)
+            .send('Only POST operations are allowed on this route');
     }
 
     console.log('Processing POST request');
@@ -27,8 +25,26 @@ export default async function processFile(req, res) {
         file.pipe(createWriteStream(saveTo));
     });
 
-    busboy.on('finish', () => {
-        console.log('Busboy finish event triggered');
+    const fileWrites = [];
+
+    busboy.on('file', (fieldname, file, filename) => {
+        console.log(`Processing file ${filename}`);
+        const filepath = join(tmpDir, filename);
+        const writeStream = createWriteStream(filepath);
+        file.pipe(writeStream);
+
+        const promise = new Promise((resolve, reject) => {
+            file.on('end', () => writeStream.end());
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+        });
+
+        fileWrites.push(promise);
+    });
+
+    busboy.on('finish', async () => {
+        await Promise.all(fileWrites);
+
         if (!saveToPath) {
             console.log('No file was uploaded');
             return res.status(400).send('No file uploaded');
@@ -42,14 +58,18 @@ export default async function processFile(req, res) {
             .on('end', () => {
                 console.log('CSV parsing completed');
                 unlinkSync(saveToPath); // Clean up temp file
-                res.status(200).send({ results });
+                res.status(200).json({ results });
             })
             .on('error', (err) => {
                 console.error('Error during CSV parsing', err);
                 unlinkSync(saveToPath); // Clean up temp file
-                return res.status(500).send('CSV parsing error');
+                res.status(500).send('CSV parsing error');
             });
     });
 
-    req.pipe(busboy);
+    if (req.rawBody) {
+        busboy.end(req.rawBody);
+    } else {
+        req.pipe(busboy);
+    }
 }
